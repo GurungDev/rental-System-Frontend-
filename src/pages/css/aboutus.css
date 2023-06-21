@@ -1,0 +1,48 @@
+.container-grid {  
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr  ;
+    grid-template-rows: 1.2fr 1.7fr 1.6fr 1.2fr ;
+    gap: 2em;
+    grid-auto-flow: row;
+    grid-template-areas:
+  
+      ". . img-2 .   "
+      ". img-1 img-2 img-4  "
+      "img-5 img-1 img-3 img-4   "
+      "img-5 . img-3 .   "
+      ". . . .   "
+     ;
+  }
+  
+  .img-1 { 
+    grid-area: img-1; 
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)),url(/public/image/lakeboatsAbout.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    }
+  
+  .img-2 { 
+    grid-area: img-2; 
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)),url(/public/image/cycling.png);
+    background-repeat: no-repeat;
+    background-size: cover; 
+    }
+  
+  .img-3 { 
+    grid-area: img-3;  
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0,0)),url(/public/image/paraglyding.png);
+    background-repeat: no-repeat;
+    background-size: cover;  }
+  
+  .img-5 { grid-area: img-5;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)),url(/public/image/ballon.png);
+    background-repeat: no-repeat;
+    background-size: cover;   }
+  
+  .img-4 { grid-area: img-4; 
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3)),url(/public/image/surfboard.png);
+    background-repeat: no-repeat;
+    background-size: cover;   
+    background-position: center;
+    }
+  

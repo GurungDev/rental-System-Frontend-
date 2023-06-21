@@ -1,0 +1,25 @@
+ 
+ @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+ 
+ .title-font {
+     font-family: 'Pacifico', cursive;
+     color: white;
+     transition: .2s ease-in-out;
+ }
+  
+ 
+ .image{
+     background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1)),url("/public/image/lakesideBoat.jpg");  
+     background-attachment: fixed;
+     top: 10;
+     width: 100%;
+      
+     background-position: center;
+     background-repeat: no-repeat;
+     background-size: cover;
+ }
+  
+ 
+  
+ 
+  

@@ -1,49 +1,99 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { Header, Lrp } from "../component/component";
 import dayjs from "dayjs";
+import { Dialog, Transition, Listbox } from "@headlessui/react";
 import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { AiFillCaretDown } from "react-icons/ai";
 import "./css/rentdetails.css";
-
-import { Listbox, Transition } from "@headlessui/react";
+import { getListingDetails } from "../service/listing/getListingDetails";
+import { useParams } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import postAddRental from "../service/rental/postAddRental";
 
 const RentDetails = () => {
+  const params = useParams();
+  const data = params?.id;
+  const [details, setDetails] = useState({});
   const today = dayjs(new Date()).set("hour", 9).startOf("hour");
   const max_day = dayjs().add(10, "day");
+  const pathName = details?.image;
+  function closeModal() {
+    setIsOpen(false);
+  }
+
+  function openModal() {
+    setIsOpen(true);
+  }
   const location = [
     { name: "Select A Location" },
     { name: "Parsyang" },
     { name: "Lakeside" },
   ];
   const duration_list = [
-    { name: "Select the duration for rent" },
-    { name: "1 Hour" },
-    { name: "3 Hour" },
-    { name: "5 Hour" },
-    { name: "10 Hour" },
+    { name: "Select the duration for rent", value: 0 },
+    { name: "1 Hour", value: 1 },
+    { name: "3 Hour", value: 3 },
+    { name: "5 Hour", value: 5 },
+    { name: "10 Hour", value: 10 },
   ];
   const quantity_list = [
-    { name: "Select the quantity" },
-    { name: "1" },
-    { name: "2" },
-    { name: "3" },
-    { name: "4" },
-    { name: "5" },
+    { name: "Select the quantity", value: 0 },
+    { name: "1", value: 1 },
+    { name: "2", value: 2 },
+    { name: "3", value: 3 },
+    { name: "4", value: 4 },
+    { name: "5", value: 5 },
   ];
   const [selected_pick_up_location, set_selected_pick_up_location] = useState(
     location[0]
   );
   const [selected_pick_up_date, set_selected_pick_up_date] = useState(today);
+  let [isOpen, setIsOpen] = useState(false);
   const [duration, setDuration] = useState(duration_list[0]);
   const [quantity, setQuantity] = useState(quantity_list[0]);
+  const [amount, setAmount] = useState(0);
   const handleSubmit = (e) => {
-    e.preventDefault();
+    async function sendData() {
+      try {
+        const res = await postAddRental({
+          selected_pick_up_date,
+          selected_pick_up_location: selected_pick_up_location.name,
+          duration: duration.name,
+          quantity: quantity.name,
+          listingId: data,
+          payment: amount,
+        });
+        if (!res) {
+          throw new Error("Couldn't Rent Now. Try Again!");
+        }
+        toast.success("Successfully rented");
+      } catch (error) {
+        toast.error("Couldn't Rent Now. Try Again!");
+      }
+    }
+    sendData();
+  };
+
+  const getDetails = () => {
+    async function results() {
+      try {
+        const res = await getListingDetails({ id: data });
+        if (!res) {
+          throw new Error("");
+        }
+        setDetails(res);
+      } catch (error) {
+        toast.error("Could not get listing details");
+      }
+    }
+    results();
   };
   useEffect(() => {
     window.scrollTo(0, 0);
+    getDetails();
   }, []);
 
   return (
@@ -54,63 +104,66 @@ const RentDetails = () => {
       <div className=" z-[10] fixed top-[90px] md:top-7 right-5">
         <Lrp />
       </div>
-      <div className=" image w-full pt-[27vh] pb-20 text-center overflow-hidden">
-        <div className="w-[95%] lg:w-[75%] flex items-center justify-center flex-col gap-5">
+      <div
+        className=" image w-full pt-[27vh] pb-20 text-center overflow-hidden"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1)),url(${pathName})`,
+        }}
+      >
+        <div className="w-[95%] m-auto lg:w-[75%] flex items-center justify-center flex-col gap-5">
           <h1 className="text-[2rem] text-neutral-200 leading-20">
-            Product Name
+            {details?.name}
           </h1>
 
           <p className="text-neutral-200 border-b-[3px] w-full pb-5 px-5 text-center leading-7">
-            Are you in search of a convenient, reliable, and hassle-free way to
-            rent products and services? Look no further than RentMeNow, the
-            ultimate online destination for all your rental needs. Whether
-            you're planning a special event, embarking on a thrilling adventure,
-            or simply need a temporary solution, RentMeNow has got you covered.
+            {details?.details}
           </p>
           <div className="w-full px-5 lg:px-10 grid grid-cols-2 gap-x-5 gapy-3">
             <p className="text-neutral-200 text-left">
               <span className="text-[1.1rem] font-medium text-blue-600">
                 Price Per Day:{" "}
               </span>{" "}
-              Rs 9232
+              Rs {details?.price_per_day}
             </p>
             <p className="text-neutral-200 text-right">
               <span className="text-[1.1rem] font-medium text-blue-600">
                 Price Per Hour:{" "}
               </span>{" "}
-              Rs 232
+              Rs {details?.price_per_hour}
             </p>
             <p className="text-neutral-200 text-left">
               <span className="text-[1.1rem] font-medium text-blue-600">
                 Contact No:{" "}
               </span>{" "}
-              9801215212
+              {details?.contact}
             </p>
             <p className="text-neutral-200 text-right">
               <span className="text-[1.1rem] font-medium text-blue-600">
                 Address:{" "}
               </span>{" "}
-              Parsyang-5, Pokhara
+              {details?.address}
             </p>
           </div>
         </div>
       </div>
       <div className="bg-[#333] w-full pt-10 pb-20">
-        <div className="text-left w-[75%] text-neutral-200 my-5 ">
+        <div className="text-left w-[75%] m-auto text-neutral-200 my-5 ">
           <h1 className="text-[1.2rem] ">Renting Details</h1>
           <p className="text-neutral-300">
             Provide your renting details to rent now.
           </p>
         </div>
         <form
-          onSubmit={(e) => handleSubmit(e)}
-          className="w-[75%] py-5 border-y-[1px] border-neutral-500"
+          onSubmit={(e) => {
+            e.preventDefault();
+          }}
+          className="w-[75%] m-auto py-5 border-y-[1px] border-neutral-500"
         >
           <div className=" mb-3 grid-cols-1 lg:grid-cols-2 justify-start items-start gap-8 grid">
             {" "}
             <div className="w-[100%] grid  grid-cols-1 justify-start items-start gap-8">
               <div className="w-[100%]   flex justify-center text-white  z-[6] items-center">
-                <h1 className="w-full lg:w-[40%]">Pick Up Location: </h1>
+                <h1 className="w-full lg:w-[40%] m-auto">Pick Up Location: </h1>
                 <div className="w-full">
                   <Listbox
                     value={selected_pick_up_location}
@@ -154,7 +207,7 @@ const RentDetails = () => {
                 </div>
               </div>
               <div className="w-[100%]   flex justify-center text-white  z-[5] items-center">
-                <h1 className="w-full lg:w-[40%]">Duration: </h1>
+                <h1 className="w-full lg:w-[40%] m-auto">Duration: </h1>
                 <div className="w-full">
                   <Listbox value={duration} onChange={setDuration}>
                     <div className="relative mt-1">
@@ -196,7 +249,7 @@ const RentDetails = () => {
                 </div>
               </div>
               <div className="w-[100%]   flex justify-center text-white  z-[4] items-center">
-                <h1 className="w-full lg:w-[40%]">Quantity: </h1>
+                <h1 className="w-full lg:w-[40%] m-auto">Quantity: </h1>
                 <div className="w-full">
                   <Listbox value={quantity} onChange={setQuantity}>
                     <div className="relative mt-1">
@@ -272,7 +325,12 @@ const RentDetails = () => {
               </div>
             </div>
             <button
-              type="submit"
+              onClick={() => {
+                setAmount(
+                  quantity.value * duration.value * details?.price_per_hour
+                );
+                openModal();
+              }}
               className={`w-[100%] mt-5 md:w-[30%]   py-2  text-neutral-200 rounded-lg shadow-xl ${
                 JSON.stringify(selected_pick_up_location) ===
                   JSON.stringify(location[0]) ||
@@ -292,6 +350,74 @@ const RentDetails = () => {
             >
               Rent Now
             </button>
+            <Transition appear show={isOpen} as={Fragment}>
+              <Dialog as="div" className="relative z-10" onClose={closeModal}>
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0"
+                  enterTo="opacity-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <div className="fixed inset-0 bg-black bg-opacity-25" />
+                </Transition.Child>
+
+                <div className="fixed inset-0 overflow-y-auto">
+                  <div className="flex min-h-full items-center justify-center p-4 text-center">
+                    <Transition.Child
+                      as={Fragment}
+                      enter="ease-out duration-300"
+                      enterFrom="opacity-0 scale-95"
+                      enterTo="opacity-100 scale-100"
+                      leave="ease-in duration-200"
+                      leaveFrom="opacity-100 scale-100"
+                      leaveTo="opacity-0 scale-95"
+                    >
+                      <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                        <Dialog.Title
+                          as="h3"
+                          className="text-lg font-medium leading-6 text-gray-900"
+                        >
+                          Payment Method
+                        </Dialog.Title>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-500">
+                            Total Amount: Rs {amount}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between">
+                          <div>
+                            <button
+                              type="button"
+                              className="inline-flex  w-[150px] justify-center rounded-md border border-transparent bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                              onClick={() => {
+                                handleSubmit();
+                                closeModal();
+                              }}
+                            >
+                              Cash On Delivery
+                            </button>
+                          </div>
+                          <div>
+                            {" "}
+                            <button
+                              type="button"
+                              className="inline-flex w-[150px] justify-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
+                              onClick={closeModal}
+                            >
+                              Esewa
+                            </button>
+                          </div>
+                        </div>
+                      </Dialog.Panel>
+                    </Transition.Child>
+                  </div>
+                </div>
+              </Dialog>
+            </Transition>
           </div>
         </form>
       </div>

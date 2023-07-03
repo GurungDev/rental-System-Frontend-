@@ -19,8 +19,8 @@ const AboutUsPage = () => {
         <Lrp />
       </div>
       <div className="bg-[#333] w-full lg:pt-[15vh] pt-[20vh] text-center">
-        <div className="w-[80%]  grid md:gap-10 grid-cols-1 lg:grid-cols-2 h-[150vh] lg:h-[80vh]">
-          <div className="w-full order-last lg:order-first text-white flex justify-center items-center">
+        <div className="w-[80%] m-auto  grid md:gap-10 grid-cols-1 lg:grid-cols-2 h-[150vh] lg:h-[80vh]">
+          <div className="w-full text-left  order-last lg:order-first text-white flex justify-center items-center">
             <div>
               <h1 className="text-[2rem] mb-8">
                 Welcome to{" "}
@@ -29,7 +29,7 @@ const AboutUsPage = () => {
                 </span>{" "}
                 !
               </h1>
-              <p className="text-[.9rem] leading-loose">
+              <p className="text-[.9rem] leading-loose text-justify">
                 We are your premier destination for renting boats, cycles, and a
                 wide range of other exciting outdoor equipment. Located in the
                 breathtaking city of Pokhara, Nepal, we aim to provide visitors
@@ -37,14 +37,17 @@ const AboutUsPage = () => {
                 beauty of the region. Whether you're looking to explore the
                 serene lakes on a boat, embark on an adventurous cycling
                 journey, or engage in various outdoor activities, we have you
-                covered. Our top-notch rental services ensure that you have
-                access to well-maintained equipment that meets the highest
-                standards of safety and quality. Our friendly and knowledgeable
-                staff are here to assist you in choosing the perfect equipment
-                for your needs and to offer valuable insights on the best places
-                to visit and explore in Pokhara. Get ready to embark on a
-                thrilling adventure and create lasting memories with Pokhara
-                Rental.
+                covered. <br /> <br />{" "}
+                <p className="text-[.9rem] leading-loose text-justify indent-10">
+                  Our top-notch rental services ensure that you have access to
+                  well-maintained equipment that meets the highest standards of
+                  safety and quality. Our friendly and knowledgeable staff are
+                  here to assist you in choosing the perfect equipment for your
+                  needs and to offer valuable insights on the best places to
+                  visit and explore in Pokhara. Get ready to embark on a
+                  thrilling adventure and create lasting memories with Pokhara
+                  Rental.
+                </p>
               </p>
             </div>
           </div>

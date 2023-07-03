@@ -1,13 +1,37 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Admin_Card } from "../component/component";
-import { Box, Button, Grid, TextField } from "@mui/material";
-import { Field, Formik, Form, ErrorMessage } from "formik";
+import {
+  Box,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  TextField,
+} from "@mui/material";
+import { Field, Formik } from "formik";
 import * as yup from "yup";
+import getAllListing from "../service/listing/getAllListing";
+import postAddListing from "../service/listing/postAddListing";
+import { toast } from "react-hot-toast";
 
 const Listing = () => {
   let [isOpen, setIsOpen] = useState(false);
-  const [showPw, setShowPw] = useState(true);
+  const [listings, setListings] = useState([]);
+  const [listingTouched, setListingTouched] = useState(false);
+  async function updateListings() {
+    try {
+      const res = await getAllListing();
+      if (!res || res.length === 0) {
+        throw new Error("No Listing");
+      }
+      setListings(res);
+    } catch (error) {
+      toast.error("Could Not Load Listings");
+    }
+  }
+  useEffect(() => {
+    updateListings();
+  }, [listingTouched]);
   function closeModal() {
     setIsOpen(false);
   }
@@ -17,7 +41,24 @@ const Listing = () => {
   }
 
   const handleFormSubmit = (values) => {
-    console.log(values);
+    const formData = new FormData();
+    for (let i in values) {
+      formData.append(i, values[i]);
+    }
+    async function handle() {
+      try {
+        const res = await postAddListing({ data: formData });
+
+        if (res) {
+          setListingTouched(!listingTouched);
+          toast.success(res);
+        }
+      } catch (error) {
+        toast.error("Something Went Wrong");
+      }
+    }
+    handle();
+
     closeModal();
   };
 
@@ -27,8 +68,10 @@ const Listing = () => {
     price_per_day: "",
     contact: "",
     address: "",
+    quantity: "",
     details: "",
-    image: "",
+    listingImage: "",
+    type: 1,
   };
   const phoneRegExp =
     /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
@@ -48,26 +91,29 @@ const Listing = () => {
       .matches(phoneRegExp, "Invalid Phone Number")
       .required("required"),
     address: yup.string().required("required"),
+    quantity: yup.number().typeError("Must be a number").required("required"),
     details: yup.string().min(20).required("required"),
-    image: yup.mixed().required("You need to provide a file"),
+    listingImage: yup.mixed().required("You need to provide a file"),
   });
   return (
-    <div className="md:absolute py-20 lg:right-0 lg:py-10 w-[95%] m-auto lg:w-[80%] ">
-      <div className="w-[80%] ">
+    <div className="md:absolute   m-0 mx-auto py-20 lg:right-0 lg:py-10 w-[95%] m-auto lg:w-[75%] ">
+      <div className="w-[80%]  m-0 mx-auto">
         <div className="w-full border-b-[2px] pb-5 grid grid-cols-2 items-center">
           <div className=" w-full">
             {" "}
-            <h1 className="text-[1.6rem] font-medium text-neutral-700">
+            <h1 className="text-[1.5rem] font-medium text-neutral-700">
               Listing
             </h1>
-            <p className="text-[1rem] text-neutral-600">Managing The listing</p>
+            <p className="text-[.8rem] text-neutral-600">
+              Managing The listing
+            </p>
           </div>
 
-          <div className="w-full  ">
+          <div className="w-full   ">
             <button
               type="button"
               onClick={openModal}
-              className="btn float-right bg-blue-600 text-white rounded py-2 px-5"
+              className="btn float-right bg-blue-600 text-[.9rem] text-white rounded py-2 px-5"
             >
               Add New Listing
             </button>
@@ -107,9 +153,11 @@ const Listing = () => {
                     <Dialog.Panel className="w-[50%] min-w-[400px] transform overflow-hidden rounded-2xl bg-white p-6   shadow-xl transition-all">
                       <Dialog.Title
                         as="h3"
-                        className="text-[1.5rem] font-medium leading-6 text-gray-900"
+                        className="text-[1.2rem] font-medium leading-6 text-gray-900"
                       >
-                        Add A New Listing
+                        <span className="border-b pb-2  px-5 border-blue-600 rounded">
+                          Add A New Listing
+                        </span>
                       </Dialog.Title>
                       <Formik
                         onSubmit={handleFormSubmit}
@@ -123,31 +171,35 @@ const Listing = () => {
                           touched,
                           errors,
                           values,
-                          formikProps,
+
                           setFieldValue,
                         }) => {
                           return (
                             <form onSubmit={handleSubmit}>
-                              <Box className="w-full grid grid-cols-1 gap-5 py-10 lg:grid-cols-2">
+                              <Box
+                                autoComplete="off"
+                                className="w-full grid grid-cols-1 gap-5 py-10 lg:grid-cols-2"
+                              >
                                 <TextField
                                   fullWidth
-                                  variant="filled"
-                                  className=""
+                                  variant="outlined"
                                   type="text"
                                   label="Name"
                                   onChange={handleChange}
                                   onBlur={handleBlur}
                                   value={values.name}
                                   name="name"
+                                  size="small"
                                   error={!!touched.name && !!errors.name}
                                   helperText={touched.name && errors.name}
                                 ></TextField>
 
                                 <TextField
                                   fullWidth
-                                  variant="filled"
+                                  variant="outlined"
                                   className=""
                                   type="text"
+                                  size="small"
                                   label="price_per_hour"
                                   onChange={handleChange}
                                   onBlur={handleBlur}
@@ -165,9 +217,10 @@ const Listing = () => {
 
                                 <TextField
                                   fullWidth
-                                  variant="filled"
+                                  variant="outlined"
                                   className=""
                                   type="text"
+                                  size="small"
                                   label="price_per_day"
                                   onChange={handleChange}
                                   onBlur={handleBlur}
@@ -185,9 +238,10 @@ const Listing = () => {
 
                                 <TextField
                                   fullWidth
-                                  variant="filled"
+                                  variant="outlined"
                                   className=""
                                   type="text"
+                                  size="small"
                                   label="contact"
                                   onChange={handleChange}
                                   onBlur={handleBlur}
@@ -198,9 +252,10 @@ const Listing = () => {
                                 ></TextField>
                                 <TextField
                                   fullWidth
-                                  variant="filled"
+                                  variant="outlined"
                                   className=""
                                   type="text"
+                                  size="small"
                                   label="address"
                                   onChange={handleChange}
                                   onBlur={handleBlur}
@@ -211,9 +266,28 @@ const Listing = () => {
                                 ></TextField>
                                 <TextField
                                   fullWidth
-                                  variant="filled"
+                                  variant="outlined"
                                   className=""
                                   type="text"
+                                  size="small"
+                                  label="Quantity"
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  value={values.quantity}
+                                  name="quantity"
+                                  error={
+                                    !!touched.quantity && !!errors.quantity
+                                  }
+                                  helperText={
+                                    touched.quantity && errors.quantity
+                                  }
+                                ></TextField>
+
+                                <TextField
+                                  fullWidth
+                                  variant="outlined"
+                                  type="text"
+                                  size="small"
                                   label="details"
                                   onChange={handleChange}
                                   onBlur={handleBlur}
@@ -223,12 +297,40 @@ const Listing = () => {
                                   helperText={touched.details && errors.details}
                                 ></TextField>
 
+                                <Field
+                                  name="fieldName"
+                                  value={values.type}
+                                  error={!!touched.details && !!errors.details}
+                                  helperText={touched.details && errors.details}
+                                >
+                                  {({ form }) => (
+                                    <Fragment>
+                                      <RadioGroup
+                                        defaultValue={1}
+                                        onChange={(e) => {
+                                          setFieldValue("type", e.target.value);
+                                        }}
+                                      >
+                                        <FormControlLabel
+                                          value="1"
+                                          control={<Radio />}
+                                          label="For Land"
+                                        />
+                                        <FormControlLabel
+                                          value="2"
+                                          control={<Radio />}
+                                          label="For Water"
+                                        />
+                                      </RadioGroup>
+                                    </Fragment>
+                                  )}
+                                </Field>
+
                                 <input
-                                  name="image" //NAME field not required in this case as image is set through onChange
                                   type="file"
                                   onChange={(event) => {
                                     setFieldValue(
-                                      "image",
+                                      "listingImage",
                                       event.target.files[0]
                                     );
                                   }}
@@ -269,15 +371,19 @@ const Listing = () => {
         </div>
 
         <div className=" mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-5 overflow-y-auto h-[70vh]">
-          <Admin_Card />
-          <Admin_Card />
-          <Admin_Card />
-          <Admin_Card />
-          <Admin_Card />
-          <Admin_Card />
-          <Admin_Card />
-          <Admin_Card />
-          <Admin_Card />
+          {listings.map((e, index) => {
+            return (
+              <Admin_Card
+                key={index}
+                details={e.details}
+                image={e.image}
+                name={e.name}
+                _id={e._id}
+                listingTouched={listingTouched}
+                setListingTouched={setListingTouched}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

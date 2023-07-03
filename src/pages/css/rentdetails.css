@@ -9,11 +9,10 @@
   
  
  .image{
-     background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1)),url("/public/image/lakesideBoat.jpg");  
+     
      background-attachment: fixed;
      top: 10;
      width: 100%;
-      
      background-position: center;
      background-repeat: no-repeat;
      background-size: cover;

@@ -1,73 +1,143 @@
-import React from "react";
-import { Box, Typography, useTheme } from "@mui/material";
-
-import { DataGrid } from "@mui/x-data-grid";
-import { Navbar } from "../component/component";
+import React, { useEffect, useState } from "react";
+import { Box, Button } from "@mui/material";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import getAllUser from "../service/user/getAllUser";
+import postDeleteUser from "../service/user/postDeleteUser";
+import { toast } from "react-hot-toast";
 
 const Customer = () => {
-  const theme = useTheme();
+  const [rows, setRows] = useState([]);
+  const [rowId, setRowId] = useState(null);
+  const [rowChanged, setChanged] = useState(false);
+  useEffect(() => {
+    async function getRows() {
+      let row = await getAllUser();
+      const updatedRow = row.map((e, index) => {
+        return { ...e, id: index + 1 };
+      });
+      setRows(updatedRow);
+    }
+
+    getRows();
+  }, [rowChanged]);
 
   const columns = [
-    { field: "id", headerName: "ID", width: 90 },
+    { field: "id", headerName: "ID", flex: 0.5, maxWidth: 90 },
     {
-      field: "firstName",
-      headerName: "First name",
-      width: 150,
-      editable: true,
+      field: "name",
+      headerName: "Name",
+      flex: 1,
+      minWidth: 150,
+      maxWidth: 250,
     },
     {
-      field: "lastName",
-      headerName: "Last name",
-      width: 150,
-      editable: true,
+      field: "email",
+      headerName: "Email",
+      flex: 1,
+      minWidth: 150,
+      maxWidth: 250,
     },
+
     {
-      field: "age",
-      headerName: "Age",
+      field: "contact",
+      headerName: "Contact No",
       type: "number",
-      width: 110,
-      editable: true,
+      flex: 1,
+      headerAlign: "left",
+      align: "left",
+      minWidth: 150,
+      maxWidth: 200,
+    },
+    {
+      field: "actions",
+      headerName: "",
+      type: "actions",
+      renderCell: (params) => {
+        const data = params.id;
+        const deleteUser = async () => {
+          try {
+            const user = await postDeleteUser({ data });
+            setChanged(!rowChanged);
+            toast.success("User Deleted");
+          } catch (error) {
+            toast.error("Error");
+          }
+        };
+        return (
+          <Box
+            onClick={() => {
+              deleteUser();
+            }}
+            className="btn bg-blue-600 text-white py-2 px-5 rounded"
+          >
+            Delete
+          </Box>
+        );
+      },
     },
   ];
 
-  const rows = [
-    { id: 1, lastName: "Snow", firstName: "Jon", age: 35 },
-    { id: 2, lastName: "Lannister", firstName: "Cersei", age: 42 },
-    { id: 3, lastName: "Lannister", firstName: "Jaime", age: 45 },
-    { id: 4, lastName: "Stark", firstName: "Arya", age: 16 },
-    { id: 5, lastName: "Targaryen", firstName: "Daenerys", age: null },
-    { id: 6, lastName: "Melisandre", firstName: null, age: 150 },
-    { id: 7, lastName: "Clifford", firstName: "Ferrara", age: 44 },
-    { id: 8, lastName: "Frances", firstName: "Rossini", age: 36 },
-    { id: 9, lastName: "Roxie", firstName: "Harvey", age: 65 },
-  ];
   return (
-    <div className="md:absolute py-20 lg:right-0 lg:py-10 w-[95%] m-auto lg:w-[80%] ">
-      <div className="flex w-full">
-        <div className="h-full "></div>
-        <div className="h-[100vh] w-full  overflow-y-auto">
-          <div className=" w-[80%] m-auto py-10">
-            <div className="text-[1.5rem]">Customer Details</div>
-            <div>
-              {" "}
-              <Box sx={{ height: "80vh", width: "100%" }}>
-                <DataGrid
-                  rows={rows}
-                  columns={columns}
-                  initialState={{
-                    pagination: {
-                      paginationModel: {
-                        pageSize: 5,
-                      },
-                    },
-                  }}
-                  pageSizeOptions={[5]}
-                  checkboxSelection
-                  disableRowSelectionOnClick
-                />
-              </Box>
-            </div>
-          </div>
+    <div className="md:absolute   m-0 mx-auto py-20 lg:right-0 lg:py-7 w-[95%] m-auto lg:w-[75%] ">
+      <div className=" w-[80%] m-auto">
+        <div className="m-0 m-auto border-b-2">
+          <h1 className="text-[1.5rem] text-neutral-800">User Details</h1>
+          <h2 className="text-[.8rem] pb-6 text-neutral-600">
+            List of all the User
+          </h2>
+        </div>
+        <div className="m-initial">
+          {" "}
+          <Box
+            className="h-[70vh] lg:h-[80vh]"
+            sx={{
+              "& .MuiDataGrid-root": {
+                border: "none",
+              },
+              "& .MuiDataGrid-cell:focus": {
+                outline: "none",
+              },
+              "& .MuiDataGrid-cell": {
+                outline: "none",
+                borderBottom: "1px solid grey",
+              },
+
+              "& .MuiDataGrid-columnHeaders": {
+                borderBottom: "1px solid grey",
+                backgroundColor: "rgb(30 64 175)",
+                color: "white",
+                fontSize: 16,
+              },
+              "& .MuiDataGrid-virtualScroller": {},
+              "& .MuiDataGrid-footerContainer": {
+                borderTop: "none",
+              },
+
+              "& .MuiDataGrid-virtualScrollerRenderZone": {
+                "& .MuiDataGrid-row": {
+                  "&:nth-child(2n)": {
+                    backgroundColor: "rgb(239 246 255)",
+                  },
+                },
+              },
+            }}
+          >
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              getRowId={(row) => row._id}
+              initialState={{
+                pagination: {
+                  paginationModel: {
+                    pageSize: 5,
+                  },
+                },
+              }}
+              pageSizeOptions={[5]}
+              disableRowSelectionOnClick
+              components={{ Toolbar: GridToolbar }}
+            />
+          </Box>
         </div>
       </div>
     </div>

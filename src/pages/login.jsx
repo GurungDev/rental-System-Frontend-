@@ -1,10 +1,59 @@
 import React, { useState } from "react";
 import { AiFillEye, AiOutlineArrowLeft } from "react-icons/ai";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, redirect, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { toast } from "react-hot-toast";
+import postLoginUser from "../service/user/postLoginUser";
+import { useDispatch } from "react-redux";
+import { setAdmin, setAdminState, setLogin } from "../redux/slices/userSlice";
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [showPw, setShowPw] = useState(true);
+  const [isRemberMe, setIsRemberMe] = useState(false);
+  const schema = yup
+    .object({
+      email: yup.string().required("Email is required."),
+      password: yup.string().required("Password is required."),
+    })
+    .required();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: yupResolver(schema) });
+  const onSubmit = async (data) => {
+    try {
+      const post = await postLoginUser({
+        data,
+      });
+      if (!post) {
+        throw new Error("Something went wrong.");
+      }
+      toast.success("Successfully Logged In.");
+      dispatch(
+        setLogin({
+          token: post?.token,
+          isRememberMe: isRemberMe,
+          isAdmin: post?.isAdmin,
+        })
+      );
+
+      if (post?.isAdmin) {
+        dispatch(
+          setAdminState({ isRememberMe: isRemberMe, isAdmin: post?.isAdmin })
+        );
+        window.location.reload();
+      }
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data);
+    }
+  };
   return (
     <>
       <div className="relative bg-[#333] w-[100wh] min-h-[100vh] py-[4em]  md:py-3 flex justify-center items-center">
@@ -18,9 +67,9 @@ const Login = () => {
           <AiOutlineArrowLeft className="text-[1.1rem]" />
           <span className="hidden md:inline">Go Back</span>
         </div>
-        <div className=" w-[80vw] md:w-[50vw] lg:w-[30vw]  grid gap-10">
+        <div className=" w-[80vw] md:w-[50vw] m-auto lg:w-[30vw]  grid gap-10">
           <div
-            className="text-white text-[2.5rem] cursor-pointer"
+            className="text-white text-[2.5rem] m-auto cursor-pointer"
             onClick={() => {
               navigate("/");
             }}
@@ -28,10 +77,10 @@ const Login = () => {
             Pokhara Rentals
           </div>
           <div className=" pb-10 w-full rounded-2xl bg-white shadow-2xl">
-            <div className="bg-white rounded-t-full  transform -translate-x-[0px] -translate-y-[50px] w-[140px] mt-3 px-7 pt-5">
+            <div className="bg-white rounded-t-full m-auto  transform -translate-x-[0px] -translate-y-[50px] w-[140px] mt-3 px-7 pt-5">
               <h1 className="text-[1.2rem] text-center">Login</h1>
             </div>
-            <div className="w-[80%]  ">
+            <div className="w-[80%]  m-auto">
               <p className="text-center text-neutral-600 mb-2 border-b pb-2">
                 Join us at{" "}
                 <span
@@ -45,26 +94,32 @@ const Login = () => {
                 <br />
                 Login Into Your Account
               </p>
-              <form action="" className="w-full flex flex-col gap-5">
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="w-full flex flex-col gap-5"
+              >
                 <div className=" w-full flex flex-col justify-items-start text-left gap-2">
                   <label className=" text-[.9rem] w-full">Email</label>
-                  <div className="w-full flex items-center justify-between bg-neutral-300 rounded py-2 px-1 hover:outline shadow hover:outline-blue-500">
+                  <div className="w-full flex items-center justify-between bg-neutral-300 rounded  hover:outline shadow hover:outline-blue-500">
                     <input
                       type="email"
                       placeholder="email@gmail.com"
-                      className="w-[100%] bg-neutral-300 outline-none"
-                      required
+                      className="w-[100%] bg-neutral-300 py-2 px-1 outline-none"
+                      {...register("email")}
                     />
+                  </div>
+                  <div className="text-red-600 text-[.8rem]">
+                    {errors.email?.message}
                   </div>
                 </div>
                 <div className=" w-full flex flex-col justify-items-start text-left gap-2">
                   <label className=" text-[.9rem] w-full">Password</label>
-                  <div className="w-full flex items-center justify-between bg-neutral-300 rounded py-2 px-1 hover:outline shadow hover:outline-blue-500">
+                  <div className="w-full flex items-center justify-between bg-neutral-300 rounded hover:outline shadow hover:outline-blue-500">
                     <input
                       type={showPw ? "password" : "text"}
                       placeholder="********"
-                      className="w-[90%] bg-neutral-300 outline-none"
-                      required
+                      className="w-[90%] bg-neutral-300  py-2 px-1 outline-none"
+                      {...register("password")}
                     />{" "}
                     <AiFillEye
                       className="text-[1.5rem] cursor-pointer"
@@ -77,6 +132,9 @@ const Login = () => {
                       }}
                     />
                   </div>
+                  <div className="text-red-600 text-[.8rem]">
+                    {errors.password?.message}
+                  </div>
                 </div>
 
                 <div className="w-full flex items-center justify-between">
@@ -85,7 +143,10 @@ const Login = () => {
                       id="remember_me"
                       name="remember_me"
                       type="checkbox"
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      onChange={() => {
+                        setIsRemberMe(!isRemberMe);
+                      }}
+                      className="h-4 w-4 text-indigo-600  focus:ring-indigo-500 border-gray-300 rounded"
                     />
                     <label
                       for="remember_me"
@@ -108,7 +169,7 @@ const Login = () => {
                 </button>
 
                 <div className="flex justify-center items-center gap-2">
-                  <div className="w-[90px] bg-neutral-300 h-[1px] "></div>
+                  <div className="w-[90px]  bg-neutral-300 h-[1px] "></div>
                   <div className="text-[.9rem] text-neutral-600">
                     Or Continue with
                   </div>
@@ -116,7 +177,7 @@ const Login = () => {
                 </div>
 
                 <div className="w-full border border-1 hover:shadow hover:border-neutral-500 border-neutral-300 px-1 py-2 rounded   duration-[.2s]">
-                  <div className="flex gap-3 items-center justify-center w-[60%] ">
+                  <div className="flex gap-3 items-center justify-center w-[60%] m-auto">
                     {" "}
                     <img
                       src="/image/googleIcon.png"
